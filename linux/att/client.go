@@ -376,17 +376,24 @@ func minInt(a, b int) int {
 
 func (c *Client) WriteLong(handle uint16, value []byte) error {
 	lenP := c.l2c.TxMTU() - 5
-	fmt.Println("Len(value):", len(value), " LenP:", lenP)
-	fmt.Println("Value:", string(value))
+	//fmt.Println("Len(value):", len(value), " LenP:", lenP)
+	//fmt.Printf("Value: %x | %q\n", value, value)
 
 	for offset := 0; offset <= len(value); offset += lenP {
-		v := value[offset:minInt(offset+lenP, len(value))]
-		h, o, v, err := c.PrepareWrite(handle, uint16(offset), v)
+		vPayload := value[offset:minInt(offset+lenP, len(value))]
+		//fmt.Printf("Offset: %d - Value: %x | %q\n", offset, vPayload, vPayload)
+		h, o, v, err := c.PrepareWrite(handle, uint16(offset), vPayload)
+		//fmt.Printf("O: %d - V: %x | %q\n", o, v, v)
+		//fmt.Printf("Handle: %d - H: %d\n", handle, h)
+		//fmt.Println("Error PrepareWrite?", err)
 		if err != nil {
 			c.ExecuteWrite(0)
 			return err
 		}
-		if o != uint16(offset+lenP) || h != handle || reflect.DeepEqual(value, v) {
+		//fmt.Printf("Check Offset: %t\n", (int(o) != len(vPayload)))
+		//fmt.Printf("Check Handle: %t\n", ( h != handle ))
+		//fmt.Printf("Check Value: %t\n", reflect.DeepEqual(vPayload, v))
+		if o != uint16(offset) || h != handle || !reflect.DeepEqual(vPayload, v) {
 			c.ExecuteWrite(0)
 			return ErrInvalidResponse
 		}
