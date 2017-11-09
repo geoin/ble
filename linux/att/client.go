@@ -3,9 +3,10 @@ package att
 import (
 	"encoding/binary"
 	"fmt"
+	"reflect"
 	"time"
 
-	"github.com/currantlabs/ble"
+	"github.com/geoin/ble"
 	"github.com/pkg/errors"
 )
 
@@ -336,7 +337,7 @@ func (c *Client) ReadByGroupType(starth, endh uint16, uuid ble.UUID) (int, []byt
 // this has been achieved in a Write Response. [Vol 3, Part F, 3.4.5.1 & 3.4.5.2]
 func (c *Client) Write(handle uint16, value []byte) error {
 	if len(value) > c.l2c.TxMTU()-3 {
-		return ErrInvalidArgument
+		return c.WriteLong(handle, value)
 	}
 
 	// Acquire and reuse the txBuf, and release it after usage.
@@ -364,6 +365,34 @@ func (c *Client) Write(handle uint16, value []byte) error {
 		return ErrInvalidResponse
 	}
 	return nil
+}
+
+func minInt(a, b int) int {
+	if a <= b {
+		return a
+	}
+	return b
+}
+
+func (c *Client) WriteLong(handle uint16, value []byte) error {
+	lenP := c.l2c.TxMTU() - 5
+	fmt.Println("Len(value):", len(value), " LenP:", lenP)
+	fmt.Println("Value:", string(value))
+
+	for offset := 0; offset <= len(value); offset += lenP {
+		v := value[offset:minInt(offset+lenP, len(value))]
+		h, o, v, err := c.PrepareWrite(handle, uint16(offset), v)
+		if err != nil {
+			c.ExecuteWrite(0)
+			return err
+		}
+		if o != uint16(offset+lenP) || h != handle || reflect.DeepEqual(value, v) {
+			c.ExecuteWrite(0)
+			return ErrInvalidResponse
+		}
+	}
+
+	return c.ExecuteWrite(1)
 }
 
 // WriteCommand requests the server to write the value of an attribute, typically
@@ -422,6 +451,7 @@ func (c *Client) PrepareWrite(handle uint16, offset uint16, value []byte) (uint1
 	req.SetAttributeOpcode()
 	req.SetAttributeHandle(handle)
 	req.SetValueOffset(offset)
+	req.SetPartAttributeValue(value)
 
 	b, err := c.sendReq(req)
 	if err != nil {
@@ -452,7 +482,7 @@ func (c *Client) ExecuteWrite(flags uint8) error {
 	txBuf := <-c.chTxBuf
 	defer func() { c.chTxBuf <- txBuf }()
 
-	req := ExecuteWriteRequest(txBuf[:1])
+	req := ExecuteWriteRequest(txBuf[:2])
 	req.SetAttributeOpcode()
 	req.SetFlags(flags)
 

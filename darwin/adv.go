@@ -1,7 +1,7 @@
 package darwin
 
 import (
-	"github.com/currantlabs/ble"
+	"github.com/geoin/ble"
 	"github.com/raff/goble/xpc"
 )
 

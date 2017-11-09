@@ -6,10 +6,10 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 
-	"github.com/currantlabs/ble"
-	"github.com/currantlabs/ble/linux/att"
-	"github.com/currantlabs/ble/linux/gatt"
-	"github.com/currantlabs/ble/linux/hci"
+	"github.com/geoin/ble"
+	"github.com/geoin/ble/linux/att"
+	"github.com/geoin/ble/linux/gatt"
+	"github.com/geoin/ble/linux/hci"
 )
 
 // NewDevice returns the default HCI device.

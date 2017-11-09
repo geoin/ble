@@ -1,8 +1,8 @@
 package dev
 
 import (
-	"github.com/currantlabs/ble"
-	"github.com/currantlabs/ble/linux"
+	"github.com/geoin/ble"
+	"github.com/geoin/ble/linux"
 )
 
 // DefaultDevice ...
