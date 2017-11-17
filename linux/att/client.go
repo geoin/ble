@@ -539,7 +539,7 @@ func (c *Client) sendReq(b []byte) (rsp []byte, err error) {
 			}
 		case err := <-c.chErr:
 			return nil, errors.Wrap(err, "ATT request failed")
-		case <-time.After(30 * time.Second):
+		case <-time.After(3 * time.Second):
 			return nil, errors.Wrap(ErrSeqProtoTimeout, "ATT request timeout")
 		}
 	}

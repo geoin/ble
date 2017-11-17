@@ -2,6 +2,7 @@ package linux
 
 import (
 	"log"
+	"time"
 
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
@@ -14,7 +15,7 @@ import (
 
 // NewDevice returns the default HCI device.
 func NewDevice() (*Device, error) {
-	dev, err := hci.NewHCI()
+	dev, err := hci.NewHCI(hci.OptDialerTimeout(3 * time.Second))
 	if err != nil {
 		return nil, errors.Wrap(err, "can't create hci")
 	}
